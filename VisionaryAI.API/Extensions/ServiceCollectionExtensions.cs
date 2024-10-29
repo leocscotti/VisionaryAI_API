@@ -13,6 +13,7 @@ namespace VisionaryAI.API.Extensions
             service.AddScoped<IEmpresaService,EmpresaService>();
             service.AddScoped<ICidadeService, CidadeService>();
             service.AddScoped<IFonteDadosService, FonteDadosService>();
+            service.AddScoped<MLModelService>();
 
             return service;
         }
