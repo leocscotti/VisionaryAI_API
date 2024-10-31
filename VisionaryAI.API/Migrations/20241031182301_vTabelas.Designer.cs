@@ -11,8 +11,8 @@ using VisionaryAI.API.Database;
 namespace VisionaryAI.API.Migrations
 {
     [DbContext(typeof(VisionaryAIDBContext))]
-    [Migration("20240913000702_vAddFonteDados")]
-    partial class vAddFonteDados
+    [Migration("20241031182301_vTabelas")]
+    partial class vTabelas
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -102,8 +102,8 @@ namespace VisionaryAI.API.Migrations
 
                     b.Property<string>("Tipo")
                         .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("NVARCHAR2(2)")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
                         .HasColumnName("tipo");
 
                     b.HasKey("Id");

@@ -14,6 +14,7 @@ namespace VisionaryAI.API.Extensions
             service.AddScoped<ICidadeService, CidadeService>();
             service.AddScoped<IFonteDadosService, FonteDadosService>();
             service.AddScoped<MLModelService>();
+            service.AddHttpClient<AuthService>();
 
             return service;
         }

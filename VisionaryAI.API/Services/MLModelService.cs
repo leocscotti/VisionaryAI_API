@@ -1,76 +1,82 @@
 ﻿using Microsoft.ML;
-using Microsoft.ML.Data;
 using VisionaryAI.API.Database;
 using VisionaryAI.API.Models;
-using System.Collections.Generic;
+using System;
 using System.Linq;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace VisionaryAI.API.Services
+public class MLModelService
 {
-    public class MLModelService
+    private readonly MLContext _mlContext;
+    private ITransformer _model;
+    private readonly VisionaryAIDBContext _dbContext;
+
+    public MLModelService(VisionaryAIDBContext dbContext)
     {
-        private readonly MLContext _mlContext;
-        private ITransformer _model;
+        _mlContext = new MLContext();
+        _dbContext = dbContext;
+        InicializarModelo();
+    }
 
-        public MLModelService()
+    public void TreinarModelo(IList<FonteDadosInput> dadosTreinamento)
+    {
+        var trainingData = _mlContext.Data.LoadFromEnumerable(dadosTreinamento);
+        var pipeline = _mlContext.Transforms.Concatenate("Features", nameof(FonteDadosInput.Tipo))
+            .Append(_mlContext.Regression.Trainers.Sdca(labelColumnName: nameof(FonteDadosInput.Tendencia), maximumNumberOfIterations: 100));
+
+        _model = pipeline.Fit(trainingData);
+    }
+
+    public void InicializarModelo()
+    {
+        var dadosTreinamento = _dbContext.FonteDeDados.ToList();
+        var dadosTreinamentoInput = dadosTreinamento.Select(f => new FonteDadosInput
         {
-            _mlContext = new MLContext();
-        }
+            Tipo = MapTipoToFloat(f.Tipo),
+            Tendencia = 0f
+        }).ToList();
 
-        public void TreinarModelo(IList<FonteDadosInput> dadosTreinamento)
+        TreinarModelo(dadosTreinamentoInput);
+    }
+
+    public async Task<string> PreverTendenciaPorId(int fonteDadosId)
+    {
+        var fonteDados = await _dbContext.FonteDeDados.FindAsync(fonteDadosId);
+        if (fonteDados == null)
+            throw new Exception($"Fonte de dados com ID {fonteDadosId} não encontrada.");
+
+        var dadosInput = new FonteDadosInput
         {
-            // Converter lista para IDataView
-            IDataView trainingData = _mlContext.Data.LoadFromEnumerable(dadosTreinamento);
+            Tipo = MapTipoToFloat(fonteDados.Tipo)
+        };
 
-            // Definir pipeline de aprendizado
-            var pipeline = _mlContext.Transforms.Concatenate("Features", nameof(FonteDadosInput.Tipo))
-                .Append(_mlContext.Regression.Trainers.Sdca(labelColumnName: nameof(FonteDadosInput.Tendencia), maximumNumberOfIterations: 100));
+        return PreverTendencia(dadosInput);
+    }
 
-            // Treinar o modelo
-            _model = pipeline.Fit(trainingData);
-        }
-
-        public void InicializarModelo(VisionaryAIDBContext dbContext)
+    private static float MapTipoToFloat(string tipo)
+    {
+        return tipo switch
         {
-            // Carregar dados da tabela FonteDados
-            var dadosTreinamento = dbContext.FonteDeDados.ToList();
+            "Tipo1" => 1f,
+            "Tipo2" => 2f,
+            "Tipo3" => 3f,
+            _ => 0f
+        };
+    }
 
-            // Mapear os dados carregados para FonteDadosInput
-            var dadosTreinamentoInput = dadosTreinamento.Select(f => new FonteDadosInput
-            {
-                Tipo = MapTipoToFloat(f.Tipo), // Chama o método estático
-                Tendencia = 0f // Ajuste se precisar de uma tendência inicial
-            }).ToList();
+    public string PreverTendencia(FonteDadosInput dadosInput)
+    {
+        if (_model == null)
+            throw new InvalidOperationException("O modelo de ML não foi treinado. Chame 'InicializarModelo()' antes de fazer previsões.");
 
-            // Chamar o método de treinamento
-            TreinarModelo(dadosTreinamentoInput);
-        }
+        var predictionEngine = _mlContext.Model.CreatePredictionEngine<FonteDadosInput, ResultadoPrevisao>(_model);
+        var resultado = predictionEngine.Predict(dadosInput);
 
-
-        // Método para mapear o tipo de fonte de dados para um valor numérico
-        private static float MapTipoToFloat(string tipo)
-        {
-            return tipo switch
-            {
-                "Tipo1" => 1f,
-                "Tipo2" => 2f,
-                "Tipo3" => 3f,
-                // Adicione outros tipos conforme necessário
-                _ => 0f // Valor padrão se o tipo não for reconhecido
-            };
-        }
-        public string PreverTendencia(FonteDadosInput dadosInput)
-        {
-            var predictionEngine = _mlContext.Model.CreatePredictionEngine<FonteDadosInput, ResultadoPrevisao>(_model);
-            var resultado = predictionEngine.Predict(dadosInput);
-
-            // Lógica para determinar a mensagem de saída
-            if (resultado.Tendencia > 0)
-                return "A previsão é de subida nas vendas.";
-            else if (resultado.Tendencia < 0)
-                return "A previsão é de queda nas vendas.";
-            else
-                return "A previsão é estável nas vendas.";
-        }
+        return resultado.Tendencia > 0
+            ? "A previsão é de subida nas vendas."
+            : resultado.Tendencia < 0
+                ? "A previsão é de queda nas vendas."
+                : "A previsão é estável nas vendas.";
     }
 }

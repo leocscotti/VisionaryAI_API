@@ -1,26 +1,29 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using VisionaryAI.API.Services;
-using VisionaryAI.API.Models;
-using VisionaryAI.API.Database;
+using System.Threading.Tasks;
 
 [ApiController]
 [Route("api/[controller]")]
 public class MLController : ControllerBase
 {
     private readonly MLModelService _mlService;
-    private readonly VisionaryAIDBContext _dbContext;
 
-    public MLController(MLModelService mlService, VisionaryAIDBContext dbContext)
+    public MLController(MLModelService mlService)
     {
-        _mlService = mlService;
-        _dbContext = dbContext;
-        _mlService.InicializarModelo(dbContext);
+        _mlService = mlService ?? throw new ArgumentNullException(nameof(mlService));
     }
 
-    [HttpPost("prever")]
-    public ActionResult<string> Prever([FromBody] FonteDadosInput input)
+    [HttpGet("prever-tendencia/{fonteDadosId}")]
+    public async Task<IActionResult> PreverTendencia(int fonteDadosId)
     {
-        var mensagemPrevisao = _mlService.PreverTendencia(input);
-        return Ok(mensagemPrevisao);
+        try
+        {
+            var resultado = await _mlService.PreverTendenciaPorId(fonteDadosId);
+            return Ok(new { Mensagem = resultado });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Erro = ex.Message });
+        }
     }
 }
