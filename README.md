@@ -27,10 +27,16 @@ A arquitetura de microservices, por outro lado, divide a aplicação em vários 
 ## Arquitetura do projeto
 
 Controllers: Gerenciam as requisições HTTP e roteiam para as camadas de serviço.
+
 Services: Implementam a lógica de negócio da aplicação, separando-a das demais camadas.
+
 Database: Contém o contexto de dados (VisionaryAIDBContext), gerenciando o acesso ao banco.
+
 Models: Definem as entidades do sistema, como Cidade e Empresa.
-Mappings: Usa o padrão Mapper para mapear entre objetos do domínio e dtos
+
+Mappings: Usa o padrão Mapper para mapear entre objetos do domínio e dtos.
+
+Tests: Implementam testes do sistema para garantir o funcionamento da aplicação.
 
 ## Design Patterns utilizados 
 
