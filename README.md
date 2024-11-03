@@ -48,7 +48,24 @@ Cada entidade tem seus endpoints listados com o verbo HTTP correspondente, entã
 
 Depois de passar o paramêtro, clicar no botão "Execute" e a requisição será efetuada. Logo após o processamento, irá retornar um http response (200= Ok, 500= InternalServerError), e assim saber a resposta desta requisição.
 
+## Testes implementados
 
+Os testes que foram implementados nessa aplicação foram testes dos Services de cada model, testando cada método da API, Buscar por id, buscar todos, adicionar, atualizar por id e excluir por id. Os testes retornam tanto mensagens de sucesso quanto de erro em cada método, assim garantindo o funcionamento dos endpoints.
+
+## Práticas de clean code utilizadas
+
+As práticas de clean code utilizadas nesse projeto foram:
+
+- Funções tem apenas uma atribuição
+- Nomes significativos em variáveis, métodos e classes
+- Espaçamento vertical entre os conceitos
+- Não possui repetições
+- Não tem comentários sem significado ou redundantes
+- Não tem efeitos colaterais
+
+## Funcionalidades da IA
+
+A IA generativa que foi implementada nada mais é do que uma IA de previsão, ela puxa a fonte de dados e a partir disso retorna uma previsão nas vendas, sendo boa, estavel ou ruim.
 
 ## Documentação da API e listagem dos endpoints 
 
